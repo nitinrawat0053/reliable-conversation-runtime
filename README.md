@@ -484,7 +484,7 @@ The demo video walks through the project with the server running locally:
 - the ordered operational trace contrasting successful vs. non-success outcomes
 - the verification benchmark (`npm run benchmark`) with all checks passing
 
-[Demo Video](<ADD_DEMO_VIDEO_LINK>)
+[Demo Video](<https://drive.google.com/file/d/1EqwgnSquUUd8kGACy-PoLglY-Su8V7-6/view?usp=drive_link>)
 
 ## Limitations
 
