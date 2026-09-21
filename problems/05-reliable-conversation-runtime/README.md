@@ -6,7 +6,7 @@ A conversational product must control what happens around a model call. It needs
 
 A partial response that ends in timeout must not silently become a successful completed turn. Operational events must be inspectable without exposing private hidden reasoning.
 
-## Your objective
+## Objective
 
 Build a bounded runtime that manages one streamed conversational turn from request through terminal state.
 

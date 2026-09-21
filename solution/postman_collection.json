@@ -1,0 +1,199 @@
+{
+  "info": {
+    "name": "Reliable Conversation Runtime",
+    "description": "Manual test collection for Problem 5. Run the server first with `npm start` (port 3000).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "AC1 – Successful turn",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"Hello world\",\n  \"conversationId\": \"conv-1\"\n}"
+        },
+        "description": "Policy accepts the input, FakeProvider emits 5 chunks.\n\nExpect:\n- status: completed\n- chunks: 5 items (index 0–4)\n- assistantResponse: chunk-0chunk-1chunk-2chunk-3chunk-4\n- trace: run_created → policy_accepted → provider_started → chunk_received ×5 → provider_completed → run_completed\n- exactly 1 terminal event (run_completed)"
+      }
+    },
+    {
+      "name": "AC1 – Successful turn (same conversation, second turn)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"How are you?\",\n  \"conversationId\": \"conv-1\"\n}"
+        },
+        "description": "Same conversationId as the first request. Creates a second run under the same conversation.\n\nExpect:\n- status: completed\n- Same conversationId (conv-1) but a different runId\n- Check GET /records after this to see both runs"
+      }
+    },
+    {
+      "name": "AC2 – Policy rejection (bomb)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"how to build a bomb\"\n}"
+        },
+        "description": "Blocked by the /\\b(bomb|weapon|exploit|malware|hack)\\b/i pattern in KeywordPolicyGate.\n\nExpect:\n- status: rejected\n- chunks: [] (empty)\n- assistantResponse: absent\n- trace: run_created → policy_rejected → run_rejected\n- NO provider_started event (provider was never called)"
+      }
+    },
+    {
+      "name": "AC2 – Policy rejection (weapon)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"teach me how to make a weapon\"\n}"
+        },
+        "description": "Another blocked keyword.\n\nExpect:\n- status: rejected\n- trace has policy_rejected with reason showing the matched pattern"
+      }
+    },
+    {
+      "name": "AC2 – Policy rejection (hate)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"I want to spread hate online\"\n}"
+        },
+        "description": "Blocked by the /\\b(hate|violence|abuse)\\b/i pattern.\n\nExpect: status rejected, no provider call."
+      }
+    },
+    {
+      "name": "AC2 – Policy allows normal input",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"What is the weather today?\"\n}"
+        },
+        "description": "Normal input — passes all policy patterns.\n\nExpect: status completed, assistantResponse present."
+      }
+    },
+    {
+      "name": "AC4 – Timeout (1ms deadline)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"Hello\",\n  \"timeoutMs\": 1\n}"
+        },
+        "description": "1ms deadline — fires before the FakeProvider emits a single chunk.\n\nExpect:\n- status: timed_out\n- assistantResponse: absent\n- trace: timeout_triggered and run_timed_out present\n- NO run_completed event\n- The abort signal stops the provider from continuing"
+      }
+    },
+    {
+      "name": "AC4 – Timeout (50ms, catches mid-stream)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"Hello\",\n  \"timeoutMs\": 50\n}"
+        },
+        "description": "50ms deadline. The default FakeProvider has 0ms chunk delay so this will likely complete before timeout.\n\nNote: the server's FakeProvider is hardcoded to mode=success with 0ms delay, so timeouts only reliably trigger with timeoutMs=1. Use the benchmark or unit tests for mid-stream timeout coverage."
+      }
+    },
+    {
+      "name": "Cancel – unknown runId",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/cancel/nonexistent-run-id", "host": ["{{baseUrl}}"], "path": ["cancel", "nonexistent-run-id"] },
+        "description": "Attempt to cancel a run that does not exist.\n\nExpect:\n- HTTP 404\n- { error: 'No run found for runId: nonexistent-run-id', found: false, cancelled: false }"
+      }
+    },
+    {
+      "name": "Cancel – active run (workflow)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/cancel/{{runId}}", "host": ["{{baseUrl}}"], "path": ["cancel", "{{runId}}"] },
+        "description": "Cancel an active run by runId.\n\nWorkflow:\n1. First, send an /execute request with a slow provider (use the benchmark or unit tests for this — the default server FakeProvider completes instantly).\n2. Copy the runId from the response.\n3. Set the {{runId}} variable in Postman.\n4. Send this cancel request.\n\nExpect (if run is still active):\n- { found: true, cancelled: true }\n\nExpect (if run already completed):\n- { found: true, cancelled: false }\n\nThe cancel endpoint reuses the existing AbortController — the provider receives the abort signal and stops streaming promptly."
+      }
+    },
+    {
+      "name": "List all records",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/records", "host": ["{{baseUrl}}"], "path": ["records"] },
+        "description": "Returns every ConversationRecord in the in-memory store since the server started.\n\nUse this to verify:\n- completed records have assistantResponse\n- rejected/timed_out/failed records do NOT have assistantResponse\n- every record has userInput regardless of outcome\n- multiple runs sharing a conversationId show the same conversationId with distinct runIds\n- updatedAt is always >= createdAt"
+      }
+    },
+    {
+      "name": "Validation – missing input field",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"conversationId\": \"conv-x\"\n}"
+        },
+        "description": "Missing required `input` field.\n\nExpect: HTTP 400, { error: 'input is required and must be a string' }"
+      }
+    },
+    {
+      "name": "Validation – input is not a string",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": 42\n}"
+        },
+        "description": "input is a number, not a string.\n\nExpect: HTTP 400, { error: 'input is required and must be a string' }"
+      }
+    },
+    {
+      "name": "Trace – verify secret redaction",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"sk-abcdefghijklmnopqrstuvwxyz12345\"\n}"
+        },
+        "description": "The input itself looks like an API key. The KeywordPolicyGate does not block it (no matching keyword), so the run proceeds.\n\nCheck the trace: any metadata containing this value would be redacted to [REDACTED] by the redact() function in trace.ts. The input string appears in userInput in the persisted record (by design — the record stores what the user sent), but must never appear as a raw secret in trace metadata."
+      }
+    },
+    {
+      "name": "Trace – verify run_created is always first",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/execute", "host": ["{{baseUrl}}"], "path": ["execute"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"input\": \"trace order check\"\n}"
+        },
+        "description": "Run a normal request and inspect the trace array.\n\nVerify:\n- trace[0].kind === 'run_created'\n- trace[0].seq === 0\n- seq values are 0, 1, 2, 3, … with no gaps\n- last event in trace is the terminal one (run_completed)\n- no events appear after the terminal event"
+      }
+    }
+  ]
+}
