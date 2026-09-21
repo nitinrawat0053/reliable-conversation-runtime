@@ -1,9 +1,9 @@
 
-🚀 # Product Engineering Challenge Submission
+ # 🚀Product Engineering Challenge Submission
 
 
 
-👤 ## Candidate
+## 👤 Candidate
 
 
 - **Name:** Nitin Singh Rawat
@@ -17,18 +17,18 @@
 
 
 
-▶️ ## Run the project
+## ▶️ Run the project
 
 
 
-📋 ### Prerequisites
+### 📋 Prerequisites
 
 
 - Node.js ≥ 18
 - npm ≥ 9
 
 
-⚙️ ### Setup
+### ⚙️ Setup
 
 
 ```bash
@@ -37,7 +37,7 @@ npm install
 ```
 
 
-🌐 ### Start the HTTP server
+### 🌐 Start the HTTP server
 
 
 ```bash
@@ -46,7 +46,7 @@ npm start
 ```
 
 
-💬 ### Execute a turn (successful)
+### 💬 Execute a turn (successful)
 
 
 ```bash
@@ -57,7 +57,7 @@ curl -s -X POST http://localhost:3000/execute \
 ```
 
 
-🛡️ ### Trigger a policy rejection
+### 🛡️ Trigger a policy rejection
 
 
 ```bash
@@ -69,7 +69,7 @@ curl -s -X POST http://localhost:3000/execute \
 ```
 
 
-⏱️ ### Trigger a timeout
+### ⏱️ Trigger a timeout
 
 
 ```bash
@@ -81,7 +81,7 @@ curl -s -X POST http://localhost:3000/execute \
 ```
 
 
-🗃️ ### List persisted records
+### 🗃️ List persisted records
 
 
 ```bash
@@ -93,7 +93,7 @@ curl -s http://localhost:3000/records | jq .
 
 
 
-🧪 ## Run the tests
+## 🧪 Run the tests
 
 
 ```bash
@@ -120,7 +120,7 @@ All 45 tests are deterministic and fully offline — no paid API, no arbitrary s
 
 
 
-📊 ## Run the verification benchmark
+## 📊 Run the verification benchmark
 
 
 ```bash
@@ -165,7 +165,7 @@ Running 10 iterations per scenario...
 
 
 
-✅ ## Acceptance scenarios and verification
+## ✅ Acceptance scenarios and verification
 
 
 | Scenario | Status |
@@ -179,7 +179,7 @@ Running 10 iterations per scenario...
 | AC7: Safe operational trace, secrets excluded | ✅ Implemented and tested |
 
 
-▶️ ### Benchmark command
+### ▶️ Benchmark command
 
 
 ```bash
@@ -187,7 +187,7 @@ cd solution && npm run benchmark
 ```
 
 
-📌 ### Observed result
+### 📌 Observed result
 
 
 
@@ -202,7 +202,7 @@ cd solution && npm run benchmark
 - Fully reproducible without a live model API.
 
 
-🎥 ### Failure / recovery scenario (for demo video)
+### 🎥 Failure / recovery scenario (for demo video)
 
 
 1. Start the server (`npm start`).
@@ -211,7 +211,7 @@ cd solution && npm run benchmark
 4. The `/records` endpoint shows the persisted state for both runs, with no `assistantResponse` on either.
 
 
-🎬 ### Demo video requirements
+### 🎬 Demo video requirements
 
 
 > **Link:-** https://drive.google.com/file/d/1EqwgnSquUUd8kGACy-PoLglY-Su8V7-6/view?usp=drive_link
@@ -236,7 +236,7 @@ The assignment requires an accessible demo video (Loom, YouTube, Google Drive, o
 
 
 
-🏗️ ## Architecture and data flow
+## 🏗️ Architecture and data flow
 
 
 ```
@@ -283,7 +283,7 @@ HTTP Request
 
 
 
-🛠️ ## Technology choices
+## 🛠️ Technology choices
 
 
 **Node.js + TypeScript + Express + Vitest**
@@ -305,7 +305,7 @@ HTTP Request
 
 
 
-💡 ## Important decisions
+## 💡 Important decisions
 
 
 ### 1. Single `transitionTo` gate prevents terminal-state races
@@ -325,7 +325,7 @@ The `ConversationStore.update()` signature accepts `assistantResponse` as an opt
 
 
 
-⚠️ ## Assumptions and limitations
+## ⚠️ Assumptions and limitations
 
 
 - **In-memory persistence**: records are lost on server restart. A production system would use a database with a transaction boundary around the status update.
@@ -339,7 +339,7 @@ The `ConversationStore.update()` signature accepts `assistantResponse` as an opt
 
 
 
-📈 ## Production and scale
+## 📈 Production and scale
 
 
 **What the submitted implementation does:**
@@ -359,7 +359,7 @@ The `ConversationStore.update()` signature accepts `assistantResponse` as an opt
 
 
 
-🤖 ## AI Usage
+## 🤖 AI Usage
 
 
 I used **Kiro (Claude Code)** as a development assistant throughout this challenge.
@@ -384,7 +384,7 @@ The architecture, state-machine design, persistence rules, runtime lifecycle, an
 
 
 
-🏆 ## Credibility Note
+## 🏆 Credibility Note
 
 
 ### 📦 Project
