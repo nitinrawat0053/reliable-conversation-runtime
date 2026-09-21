@@ -1,6 +1,10 @@
-# Product Engineering Challenge Submission
 
-## Candidate
+🚀 # Product Engineering Challenge Submission
+
+
+
+👤 ## Candidate
+
 
 - **Name:** Nitin Singh Rawat
 - **Email:** nitinrawat2040@gmail.com
@@ -8,30 +12,42 @@
 - **Selected problem:** Problem 5 — Reliable AI Conversation Runtime
 - **Demo video:** https://drive.google.com/file/d/1EqwgnSquUUd8kGACy-PoLglY-Su8V7-6/view?usp=drive_link
 
+
 ---
 
-## Run the project
 
-### Prerequisites
+
+▶️ ## Run the project
+
+
+
+📋 ### Prerequisites
+
 
 - Node.js ≥ 18
 - npm ≥ 9
 
-### Setup
+
+⚙️ ### Setup
+
 
 ```bash
 cd solution
 npm install
 ```
 
-### Start the HTTP server
+
+🌐 ### Start the HTTP server
+
 
 ```bash
 npm start
 # Server listens on http://localhost:3000
 ```
 
-### Execute a turn (successful)
+
+💬 ### Execute a turn (successful)
+
 
 ```bash
 curl -s -X POST http://localhost:3000/execute \
@@ -40,7 +56,9 @@ curl -s -X POST http://localhost:3000/execute \
   | jq .
 ```
 
-### Trigger a policy rejection
+
+🛡️ ### Trigger a policy rejection
+
 
 ```bash
 curl -s -X POST http://localhost:3000/execute \
@@ -50,7 +68,9 @@ curl -s -X POST http://localhost:3000/execute \
 # → "rejected"
 ```
 
-### Trigger a timeout
+
+⏱️ ### Trigger a timeout
+
 
 ```bash
 curl -s -X POST http://localhost:3000/execute \
@@ -60,15 +80,21 @@ curl -s -X POST http://localhost:3000/execute \
 # → "timed_out"
 ```
 
-### List persisted records
+
+🗃️ ### List persisted records
+
 
 ```bash
 curl -s http://localhost:3000/records | jq .
 ```
 
+
 ---
 
-## Run the tests
+
+
+🧪 ## Run the tests
+
 
 ```bash
 cd solution
@@ -84,11 +110,18 @@ Test Files  1 passed (1)
      Tests  45 passed (45)
 ```
 
+
+> 🧪 **Deterministic verification**
+
 All 45 tests are deterministic and fully offline — no paid API, no arbitrary sleeps.
+
 
 ---
 
-## Run the verification benchmark
+
+
+📊 ## Run the verification benchmark
+
 
 ```bash
 cd solution
@@ -127,9 +160,13 @@ Running 10 iterations per scenario...
 ============================================================
 ```
 
+
 ---
 
-## Acceptance scenarios and verification
+
+
+✅ ## Acceptance scenarios and verification
+
 
 | Scenario | Status |
 |---|---|
@@ -141,13 +178,20 @@ Running 10 iterations per scenario...
 | AC6: Terminal-state race — exactly one wins | ✅ Implemented and tested |
 | AC7: Safe operational trace, secrets excluded | ✅ Implemented and tested |
 
-### Benchmark command
+
+▶️ ### Benchmark command
+
 
 ```bash
 cd solution && npm run benchmark
 ```
 
-### Observed result
+
+📌 ### Observed result
+
+
+
+> 🟢 **Benchmark result: 50 runs across 5 scenarios.**
 
 50 runs across 5 scenarios (10 each). Every check passed:
 
@@ -157,16 +201,20 @@ cd solution && npm run benchmark
 - No events appear after the terminal event in any trace.
 - Fully reproducible without a live model API.
 
-### Failure / recovery scenario (for demo video)
+
+🎥 ### Failure / recovery scenario (for demo video)
+
 
 1. Start the server (`npm start`).
 2. Send a request with `timeoutMs: 1` — the run reaches `timed_out` immediately.
 3. Send a request with blocked content — the run reaches `rejected` and the server log shows zero provider invocations.
 4. The `/records` endpoint shows the persisted state for both runs, with no `assistantResponse` on either.
 
-### Demo video requirements
 
-> **TODO: Record a 3–5 minute demo video and link it at the top of this file.**
+🎬 ### Demo video requirements
+
+
+> **Link:-** https://drive.google.com/file/d/1EqwgnSquUUd8kGACy-PoLglY-Su8V7-6/view?usp=drive_link
 
 The assignment requires an accessible demo video (Loom, YouTube, Google Drive, or similar). A submission without it is incomplete per the assignment README.
 
@@ -183,9 +231,13 @@ The assignment requires an accessible demo video (Loom, YouTube, Google Drive, o
 
 **Format:** A straightforward screen recording with narration is sufficient. Production-quality editing is not expected.
 
+
 ---
 
-## Architecture and data flow
+
+
+🏗️ ## Architecture and data flow
+
 
 ```
 HTTP Request
@@ -226,9 +278,13 @@ HTTP Request
 | Trace builder | `src/trace.ts` | Ordered event log with redaction |
 | HTTP server | `src/server.ts` | Thin Express wrapper, no business logic |
 
+
 ---
 
-## Technology choices
+
+
+🛠️ ## Technology choices
+
 
 **Node.js + TypeScript + Express + Vitest**
 
@@ -244,9 +300,13 @@ HTTP Request
 - **Zod** for input validation: useful in production; omitted here to stay within scope.
 - **Redis** for persistence: out of scope — the in-memory store is honest about its limits in `SUBMISSION.md`.
 
+
 ---
 
-## Important decisions
+
+
+💡 ## Important decisions
+
 
 ### 1. Single `transitionTo` gate prevents terminal-state races
 
@@ -260,9 +320,13 @@ The timeout promise resolves with the literal string `'timed_out'`, which races 
 
 The `ConversationStore.update()` signature accepts `assistantResponse` as an optional third parameter, but the runtime only passes it when `status === 'completed'`. Every other terminal path calls `update(runId, status)` with no third argument. This is the persistence boundary: a reviewer reading the store can trust that the presence of `assistantResponse` is the authoritative signal that the run completed successfully.
 
+
 ---
 
-## Assumptions and limitations
+
+
+⚠️ ## Assumptions and limitations
+
 
 - **In-memory persistence**: records are lost on server restart. A production system would use a database with a transaction boundary around the status update.
 - **No authentication**: out of scope per the brief.
@@ -270,9 +334,13 @@ The `ConversationStore.update()` signature accepts `assistantResponse` as an opt
 - **FakeProvider only**: the HTTP server uses `FakeProvider` to keep the demo self-contained. Wiring a real Claude provider would replace the provider construction in `server.ts` with no changes to the runtime.
 - **Cancellation in the HTTP layer**: the `/execute` endpoint is synchronous (awaits the result). The `POST /cancel/:runId` endpoint provides caller-initiated cancellation by locating the active run's `AbortController` via a shared in-memory `activeRuns` map and calling `abort()`. This is sufficient for the exercise; a production system might use a persistent run registry.
 
+
 ---
 
-## Production and scale
+
+
+📈 ## Production and scale
+
 
 **What the submitted implementation does:**
 
@@ -286,9 +354,13 @@ The `ConversationStore.update()` signature accepts `assistantResponse` as an opt
 4. **Structured logging**: replace `TraceBuilder` with a Pino logger that emits JSON to stdout — same schema, plugs into any log aggregator.
 5. **Retry with exponential backoff**: currently failed runs stay failed. A retry queue (in-memory or RabbitMQ) would re-enqueue `failed` runs with a bounded attempt counter.
 
+
 ---
 
-## AI Usage
+
+
+🤖 ## AI Usage
+
 
 I used **Kiro (Claude Code)** as a development assistant throughout this challenge.
 
@@ -307,22 +379,40 @@ All generated code was reviewed and validated by me. I made the final engineerin
 
 The architecture, state-machine design, persistence rules, runtime lifecycle, and overall correctness were my responsibility. AI assistance was used as a development aid, while I remained responsible for reviewing, testing, and validating the final implementation.
 
+
 ---
 
-## Credibility Note
+
+
+🏆 ## Credibility Note
+
+
+### 📦 Project
 
 **Project:** Full-stack E-commerce Microservices Platform — Personal Project
+
+
+### 🎯 Problem
 
 **Problem it solved:**  
 Built an e-commerce platform designed around independently deployable services for authentication, users, products, carts, orders, payments, and notifications. The main engineering challenge was keeping business-critical operations reliable while services communicated asynchronously.
 [GitHub](https://github.com/nitinrawat0053)· 
 [Live site](https://www.shopmicro.in/).
 
+
+### 👨‍💻 My Contribution
+
 **My contribution:**  
 Designed and implemented the microservices architecture, including the API Gateway, Auth, User, Product, Cart, Order, Payment, and Notification services. I also implemented the RabbitMQ event-driven communication layer, Redis-based caching and rate limiting, Razorpay payment integration with webhook verification, and the notification flow using email/SMS providers.
 
+
+### ⚙️ Scale / Operational Complexity
+
 **Scale / Operational Complexity:**  
 The system consists of approximately 8 independently deployable services running in Docker Compose, with RabbitMQ handling asynchronous events and retry/dead-letter flows. Redis is used for caching and rate limiting, while the system is deployed on a GCP VM. Payment events are verified using HMAC-SHA256 webhook signatures.
+
+
+### 🧠 Difficult Engineering Decision
 
 **Difficult Engineering Decision:**  
 A key reliability decision was choosing between publishing directly to RabbitMQ from the Order Service and using the **Outbox Pattern**.
