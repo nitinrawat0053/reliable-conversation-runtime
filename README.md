@@ -1,4 +1,4 @@
-# Reliable AI Conversation Runtime
+# 🚀 Reliable AI Conversation Runtime
 
 This project is a bounded backend runtime that manages one streamed AI conversation turn — from request intake through a single, well-defined terminal state. It is the solution to **Problem 5 (Reliable AI Conversation Runtime)** from the Caygnus Product Engineering Challenge. The runtime orchestrates a pre-response policy gate, a provider that streams ordered text chunks, cancellation, timeout enforcement, persistence with explicit commit rules, and an ordered operational trace — all behind clean component boundaries.
 
@@ -6,7 +6,8 @@ The problem it solves is correctness around the model call. A conversational pro
 
 The implementation is **fully deterministic and runs offline**. It ships a `FakeProvider` that yields scripted chunks with controllable timing, so every test and the verification benchmark are repeatable without a live model, a paid API, or arbitrary sleeps. A real provider implementing the `ModelProvider` interface could be dropped in without touching the runtime.
 
-## Key Guarantees
+---
+## 🛡️ Key Guarantees
 
 The following behavior is implemented and verified by the test suite (`src/tests/runtime.test.ts`) and the verification benchmark (`scripts/benchmark.ts`).
 
@@ -25,7 +26,8 @@ The following behavior is implemented and verified by the test suite (`src/tests
 
 What is **not** guaranteed: persistence is not durable across process restarts, and the policy gate is a deterministic keyword check rather than a production safety system. Both limits are deliberate for the assignment scope and discussed in [Limitations](#limitations).
 
-## Architecture
+---
+## 🏗️ Architecture
 
 The project is split into five components behind small TypeScript interfaces, plus a thin HTTP presentation layer.
 
@@ -72,7 +74,8 @@ flowchart LR
 | `src/tests/runtime.test.ts` | 45 deterministic vitest tests covering all seven acceptance criteria plus state-machine and persistence edge cases. |
 | `scripts/benchmark.ts` | Verification benchmark: 10 iterations × 5 scenarios = 50 runs, each checked against the invariant set. |
 
-## Lifecycle / State Machine
+---
+## 🔄 Lifecycle / State Machine
 
 Every run begins in `pending` and must reach exactly one terminal state.
 
@@ -133,7 +136,8 @@ It reads and writes `run.status` in one synchronous step. Because Node.js runs J
 
 Because only one path wins the `transitionTo` guard, a canceled or timed-out run **cannot later become `completed`**: any subsequent transition attempt finds the status already terminal and is rejected.
 
-## Streaming Model
+---
+## 🌊 Streaming Model
 
 The runtime never talks to a model directly. A provider is any object exposing `stream(input, signal): AsyncIterable<ProviderChunk>`. `FakeProvider` is the deterministic implementation used by the server, all tests, and the benchmark — it exists so the whole verification story is repeatable and offline, and it never calls a real model API.
 
@@ -159,7 +163,8 @@ Chunk mechanics:
 
 `FakeProvider` is deterministic: the same options always produce the same chunk sequence, timing, and outcome. It is a verification instrument, not a stand-in for a production model endpoint.
 
-## Policy
+---
+## 🛡️ Policy
 
 `PolicyGate` is a synchronous interface: `evaluate(input): { allowed: boolean; reason?: string }`. The default implementation, `KeywordPolicyGate`, matches input against a small set of `RegExp` patterns (`bomb|weapon|exploit|malware|hack` and `hate|violence|abuse`, case-insensitive).
 
@@ -173,7 +178,8 @@ policy decision  →  provider invocation
 
 This gate is intentionally simple and deterministic. It is a pre-response check that proves the safety-gate ordering works, not a production-grade content-safety system (see [Limitations](#limitations)).
 
-## Persistence
+---
+## 💾 Persistence
 
 `ConversationStore` (`src/persistence.ts`) is an **in-memory** store: a `Map<runId, ConversationRecord>`. Records are **not durable** and are lost when the process restarts — this is the honest limit of the prototype and keeps tests fully self-contained.
 
@@ -193,7 +199,8 @@ The `assistantResponse` rule is enforced in two places: `ConversationRuntime` on
 
 The storage surface is just three operations (`create`, `update`, `get`/`getAll`), which forms the abstraction boundary. A future production system would replace the `Map` with a transactional database and optimistic locking to keep the terminal-state guarantee across processes — that is a forward consideration, **not implemented here**.
 
-## Operational Trace
+---
+## 🔎 Operational Trace
 
 `TraceBuilder` produces an append-only, per-run ordered event log. Every event carries:
 
@@ -223,7 +230,8 @@ Terminal events close the trace: the runtime emits nothing after the terminal ev
 
 The trace is a **process-local diagnostic log per run** — it is not a distributed tracing system. It deliberately does **not** expose: API keys, credentials, system prompts, chain-of-thought or hidden reasoning, raw stack traces, or unredacted user input in metadata.
 
-## API
+---
+## 🌐 API
 
 The HTTP layer (`src/server.ts`) exposes three endpoints. The server runs on port `3000` by default (override with `PORT`).
 
@@ -339,7 +347,8 @@ Completed records carry `assistantResponse`; rejected, cancelled, timed-out, and
 
 A Postman collection covering these scenarios is included in `postman_collection.json`.
 
-## Project Structure
+---
+## 📁 Project Structure
 
 ```
 solution/
@@ -362,7 +371,8 @@ solution/
         └── runtime.test.ts    # 45 deterministic tests (all acceptance criteria)
 ```
 
-## Getting Started
+---
+## ⚡ Getting Started
 
 Prerequisites: Node.js ≥ 18 and npm ≥ 9. No environment variables are required; `PORT` is optional (default `3000`).
 
@@ -406,7 +416,8 @@ Prerequisites: Node.js ≥ 18 and npm ≥ 9. No environment variables are requir
 
 On newer Node versions, Node may print an experimental-loader/deprecation warning for `ts-node` when running `npm start` or `npm run benchmark`; it is harmless.
 
-## Verification
+---
+## ✅ Verification
 
 Automated verification is split into two layers:
 
@@ -434,7 +445,8 @@ Every run is verified against the benchmark's invariants:
 
 Current observed result: **50 runs across 5 scenarios — ALL CHECKS PASSED, no violations.** The scenario reproduces bit-for-bit identical status counts (`completed×10`, `rejected×10`, `cancelled×10`, `timed_out×10`, `failed×10`) because the whole benchmark is deterministic. Exit code is non-zero if any violation is found.
 
-## Example Workflow
+---
+## 🔁 Example Workflow
 
 A successful turn, step by step:
 
@@ -446,7 +458,8 @@ A successful turn, step by step:
 6. **Persistence** — `store.update(runId, 'completed', assembled)` writes the joined chunk text as the record's `assistantResponse`.
 7. **Trace generation** — the final trace (`run_created → policy_accepted → provider_started → chunk_received ×5 → provider_completed → run_completed`, seq 0–9) is returned together with `status`, `chunks`, and `assistantResponse` in the `ExecuteResult`.
 
-## Design Decisions / Trade-offs
+---
+## 🧠 Design Decisions / Trade-offs
 
 - **Deterministic `FakeProvider` instead of a live model.** Every acceptance scenario, test, and benchmark step is repeatable and offline. The cost — no demonstration with a real model — is acceptable because the assignment evaluates orchestration and state semantics, not prompt quality.
 - **Provider abstraction over `AsyncIterable` + `AbortSignal`.** A real streaming SDK can implement `ModelProvider.stream` without touching the runtime, persistence, or policy. The abstraction is exactly as large as the runtime needs.
@@ -456,7 +469,8 @@ A successful turn, step by step:
 - **In-memory persistence with a strict commit rule.** A plain `Map` keeps tests self-contained, and bounding the write surface to the `completed` state guarantees no non-success run ever looks successful. Durability is explicitly out of scope rather than pretended.
 - **Safe operational tracing.** Redaction happens at write time, sequences are per-run monotonic, and the trace deliberately excludes stacks, secrets, and model internals — diagnostics without leaking.
 
-## Testing Strategy
+---
+## 🧪 Testing Strategy
 
 The 45 tests map directly onto the acceptance criteria and are grouped in `src/tests/runtime.test.ts`:
 
@@ -473,7 +487,8 @@ The 45 tests map directly onto the acceptance criteria and are grouped in `src/t
 - **Provider modes** — `slow` and `cancel` labels drive the timeout and abort paths respectively; `success` and `failure` modes pin their base behavior.
 - **HTTP integration** — missing/invalid `input` → 400, timeout via request body, cancel over `POST /cancel/:runId` (with a slow provider injected through `providerFactory`), and 404 for an unknown `runId`.
 
-## Demo
+---
+## 🎥 Demo
 
 The demo video walks through the project with the server running locally:
 
@@ -486,7 +501,8 @@ The demo video walks through the project with the server running locally:
 
 [Demo Video](<https://drive.google.com/file/d/1EqwgnSquUUd8kGACy-PoLglY-Su8V7-6/view?usp=drive_link>)
 
-## Limitations
+---
+## ⚠️ Limitations
 
 The implementation is scoped to a 6–8 hour engineering exercise, and the following limits are deliberate rather than defects:
 
@@ -498,11 +514,13 @@ The implementation is scoped to a 6–8 hour engineering exercise, and the follo
 
 These choices keep the core — bounded execution and correct terminal-state semantics — reliable and reviewable, which is the point of the exercise.
 
-## AI Usage
+---
+## 🤖 AI Usage
 
 I used **Kiro (Claude Code)** as a development assistant throughout the challenge. It supported the initial scaffolding, helped draft parts of the implementation, and assisted with the test suite and the verification benchmark. I reviewed and validated all generated code, resolved configuration and state-transition issues, verified the timeout and cancellation semantics, and ran the final type check, test suite, and benchmark myself. The architecture, state-machine design, persistence rules, runtime lifecycle, and final correctness were my responsibility.
 
-## Credibility / Prior Engineering Experience
+---
+## 🏆 Credibility / Prior Engineering Experience
 
 This solution connects directly to reliability concerns I've worked on in prior engineering projects — specifically a **full-stack e-commerce microservices platform** (documented in `SUBMISSION.md` in this repository). The relevant experience:
 
@@ -512,4 +530,14 @@ This solution connects directly to reliability concerns I've worked on in prior 
 - **Payment webhooks** — Razorpay webhook verification with HMAC-SHA256 signatures.
 - **The Outbox Pattern** — a deliberate decision to write events as part of the database operation and publish asynchronously with retries, closing the "DB commit succeeds but the broker message is lost" window for order and payment flows.
 
-That project exercised the same class of problems as this runtime: explicit state transitions, asynchronous processing, failure handling, retries, and component boundaries that can be replaced independently. Evidence: [GitHub](https://github.com/nitinrawat0053). Full details and the live-site link are in `SUBMISSION.md`.
+That project exercised the same class of problems as this runtime: explicit state transitions, asynchronous processing, failure handling, retries, and component boundaries that can be replaced independently.
+
+- **GitHub:** [View the source code](https://github.com/nitinrawat0053/ecommerce-microservices)
+- **Live Project:** [View the live deployment](https://www.shopmicro.in/)
+
+## 👨‍💻 Author
+
+**Nitin Singh Rawat**
+
+- **GitHub:** [@nitinrawat0053](https://github.com/nitinrawat0053)
+- **LinkedIn:** https://www.linkedin.com/in/nitin-singh-rawat-9594b228b/
